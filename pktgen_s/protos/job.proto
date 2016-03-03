@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message Job {
+  int32 m = 1; // Transmit at M mpbs
+  int32 t = 2; // Generate traffic for T seconds
+  int32 w = 3; // Warmup for W seconds before making measurements
+  int32 n = 4; // Generate a uniform distribution of N flows
+  int32 s_min = 5; // Generate packets with sizes in [MIN,MAX]
+  int32 s_max = 6; // min size of packet
+  bool r = 7; // Randomize packet payloads
+  bool l = 8; // Measure latency
+}
