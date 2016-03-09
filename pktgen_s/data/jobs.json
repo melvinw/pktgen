@@ -1,0 +1,32 @@
+{
+	"jobs": [
+		{
+			"nodes": ["m0"],
+			"priority": 1,
+			"data": {
+				"m": 20,
+				"t": 30,
+				"w": 5,
+				"n": 15,
+				"s_min": 200,
+				"s_max": 800,
+				"r": true,
+				"l": true
+			}
+		},
+		{
+			"nodes": ["m0"],
+			"priority": 2,
+			"data": {
+				"m": 40,
+				"t": 30,
+				"w": 5,
+				"n": 15,
+				"s_min": 500,
+				"s_max": 0,
+				"r": true,
+				"l": false
+			}
+		}		
+	]
+}
