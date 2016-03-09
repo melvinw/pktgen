@@ -196,6 +196,8 @@ static int pktgen_parse_args(int argc, char *argv[], struct pktgen_config *cfg) 
     if (n < 5 && !(cfg->flags & (FLAG_WAIT | FLAG_PRINT))) {
         return -1;
     }
+    cfg->flags &= !FLAG_PRINT;
+    cfg->flags &= !FLAG_WAIT;
     return 0;
 }
 
