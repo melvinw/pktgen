@@ -120,6 +120,8 @@ static int pktgen_parse_args(int argc, char *argv[], struct pktgen_config *cfg) 
     int c, n = 0;
     char *p, *q;
     optind = 1;
+    cfg->flags &= !FLAG_PRINT;
+    cfg->flags &= !FLAG_WAIT;
     while ((c = getopt (argc, argv, "pqrlom:t:w:n:s:k:")) != -1) {
         switch (c) {
             case 'p':
