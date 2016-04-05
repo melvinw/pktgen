@@ -1,5 +1,5 @@
 #include "pktgen.h"
-#include "pktgen_worker.c"
+#include "pktgen_worker.h"
 
 static inline int port_init(uint8_t port, struct pktgen_config *config UNUSED) {
     struct rte_eth_conf port_conf = port_conf_default;

@@ -110,8 +110,10 @@ class Q(object):
                 logger.info('Node %s successfully completed job.' % self.nodes[ip].addr())
                 self.nodes[ip].finish_current_job()
                 self.nodes[ip].next_job()
-            if status.type == status_pb2.Status.FAIL:
-                logger.info('Node %s successfully completed job.' % self.nodes[ip].addr())
+            elif status.type == status_pb2.Status.FAIL:
+                logger.info('Node %s failed to complete job.' % self.nodes[ip].addr())
+            elif status.type == status_pb2.Status.STARTED:
+                logger.info("Successfully started job on node %s." % self.nodes[ip].addr())
         except:
             logger.info('Failed to read status from node %s' % self.nodes[ip].addr())
             pass
@@ -148,7 +150,7 @@ class Q(object):
 
     def setup_socket(self):
         """
-        Setup thte sock on (self.ip, self.port).
+        Setup the sock on (self.ip, self.port).
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
