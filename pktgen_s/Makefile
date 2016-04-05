@@ -1,50 +1,89 @@
-MAKEFLAGS += --silent
-CC = gcc
-CFLAGS = -std=gnu99
-LDFLAGS = 
+#   BSD LICENSE
+#
+#   Copyright(c) 2010-2014 Intel Corporation. All rights reserved.
+#   All rights reserved.
+#
+#   Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions
+#   are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in
+#       the documentation and/or other materials provided with the
+#       distribution.
+#     * Neither the name of Intel Corporation nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+#   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+#   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+#   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+#   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+#   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+#   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CFLAGS += `pkg-config --cflags 'libprotobuf-c >= 1.0.0'`
-LDFLAGS += `pkg-config --libs 'libprotobuf-c >= 1.0.0'`
+ifeq ($(RTE_SDK),)
+$(error "Please define RTE_SDK environment variable")
+endif
+
+# Default target, can be overridden by command line or environment
+RTE_TARGET ?= x86_64-native-linuxapp-gcc
+
+include $(RTE_SDK)/mk/rte.vars.mk
+
+VPATH = server
+
+# binary name
+APP = pktgen_server
+
+# all source are stored in SRCS-y
+SRCS-y = server/pktgen_server.c server/pktgen_server_util.c server/pktgen_util.c server/pktgen_worker.c server/job.pb-c.c server/status.pb-c.c
+
+#CFLAGS += $(WERROR_FLAGS)
+CFLAGS += -std=gnu99
+CFLAGS += $(shell pkg-config --cflags 'libprotobuf-c >= 1.0.0')
+LDFLAGS += $(shell pkg-config --libs 'libprotobuf-c >= 1.0.0')
+
+# workaround for a gcc bug with noreturn attribute
+# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=12603
+ifeq ($(CONFIG_RTE_TOOLCHAIN_GCC),y)
+CFLAGS_main.o += -Wno-return-type
+endif
+
+EXTRA_CFLAGS += -O3 -g -Wfatal-errors
+EXTRA_LDFLAGS += -lreadline
+
+include $(RTE_SDK)/mk/rte.extapp.mk
+
+### PROTOS ###
+
+SERVER_SRC = server
+SCHEDULER_SRC = scheduler
 
 PROTOS_SRC = protos
 PROTOS = $(shell find $(PROTOS_SRC) -name '*.proto')
 
-# Server-Specific Functions #
-SERVER_SRC = server
-SERVER_EXECUTABLE = $(SERVER_SRC)/pktgen_server
-SERVER_SOURCES = $(shell find $(SERVER_SRC) -name '*.c')
-SERVER_OBJECTS = $(SERVER_SOURCES:.c=.o)
-
 SERVER_PROTOC = protoc-c
 SERVER_PFLAGS = --c_out=$(SERVER_SRC) --proto_path=$(PROTOS_SRC)
 
-server: $(SERVER_SOURCES) $(SERVER_EXECUTABLE)
+SCHEDULER_PROTOC = protoc
+SCHEDULER_PFLAGS = --python_out=$(SCHEDULER_SRC) --proto_path=$(PROTOS_SRC)
 
-$(SERVER_EXECUTABLE): $(SERVER_SOURCES) server_protos
-	$(CC) -o $@ $(SERVER_SOURCES) $(CFLAGS) $(LDFLAGS)
+protos: server_protos scheduler_protos
 
 server_protos:
 	$(SERVER_PROTOC) $(SERVER_PFLAGS) $(PROTOS)
 
-server_clean:
-	rm -f $(SERVER_OBJECTS) $(SERVER_EXECUTABLE)
-	rm -f $(shell find $(SERVER_SRC) -name '*.pb-c*')
-
-# Scheduler-Specific Functions #
-SCHEDULER_SRC = scheduler
-SCHEDULER_PROTOC = protoc
-SCHEDULER_PFLAGS = --python_out=$(SCHEDULER_SRC) --proto_path=$(PROTOS_SRC)
-
-scheduler: scheduler_protos
-
 scheduler_protos:
 	$(SCHEDULER_PROTOC) $(SCHEDULER_PFLAGS) $(PROTOS)
 
-scheduler_clean:
-	rm -f $(shell find $(SCHEDULER_SRC) -name '*_pb2*')
-
-# General Functions #
-all: server scheduler
-
-clean: server_clean scheduler_clean
-
+clean_protos:
+	rm -f $(shell find $(SERVER_SRC) -name '*.pb-c*')
+	rm -f $(shell find $(SCHEDULER_SRC) -name '*_pb2*')	
