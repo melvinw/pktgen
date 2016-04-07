@@ -229,7 +229,7 @@ response_handler(int fd, char *request, int request_bytes, struct pktgen_config 
     if (j->tcp)
         cmd->proto = 6;
     else
-        cmd->proto = 17;
+        cmd->proto = 17; 
 
     if (cmd->life_min >= 0)
         cmd->flags |= FLAG_LIMIT_FLOW_LIFE;
