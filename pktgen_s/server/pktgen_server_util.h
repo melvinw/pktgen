@@ -44,6 +44,3 @@ int connect_socket(char *ip, char *port);
 int read_n_bytes(int sock, int n, char *buf);
 
 #endif
-
-
-

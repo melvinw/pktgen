@@ -1,12 +1,22 @@
 syntax = "proto3";
 
 message Job {
-  int32 m = 1; // Transmit at M mpbs
-  int32 t = 2; // Generate traffic for T seconds
-  int32 w = 3; // Warmup for W seconds before making measurements
-  int32 n = 4; // Generate a uniform distribution of N flows
-  int32 s_min = 5; // Generate packets with sizes in [MIN,MAX]
-  int32 s_max = 6; // min size of packet
-  bool r = 7; // Randomize packet payloads
-  bool l = 8; // Measure latency
+    optional int32 tx_rate = 1;
+    optional int32 duration = 2;
+    optional int32 warmup = 3;
+    optional int32 num_flows = 4;
+    optional int32 port_min = 5;
+    optional int32 port_max = 6;
+    optional int32 size_min = 7;
+    optional int32 size_max = 8;
+    optional float life_min = 9;
+    optional float life_max = 10;
+    optional bool randomize = 11;
+    optional bool latency = 12;
+    optional bool online = 13;
+    optional bool stop = 14;
+    optional bool print = 15;
+    optional bool tcp = 16;
+    optional string dst_mac = 17;
+    optional string port = 18;
 }

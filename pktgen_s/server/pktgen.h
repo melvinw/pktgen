@@ -1,5 +1,5 @@
 #ifndef PKTGEN_H
-#define PKTGEN_H 1
+#define PKTGEN_H
 
 #include "pktgen_util.h"
 
@@ -103,8 +103,9 @@ static struct ether_addr ether_src UNUSED =
 static struct ether_addr ether_dst UNUSED =
 {{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x01 }};
 
-
-static void generate_packets(int rte_eal_argc, char *rte_eal_argv[], struct pktgen_config *config, struct pktgen_config cmd);
-
+static int pktgen_parse_args(int argc, char *argv[], struct pktgen_config *cfg);
+static int lcore_init(void *arg);
+static void usage(void);
+static inline int port_init(uint8_t port, struct pktgen_config *config UNUSED);
 
 #endif

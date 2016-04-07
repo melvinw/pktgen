@@ -1,5 +1,5 @@
 #ifndef PKTGEN_UTIL_H
-#define PKTGEN_UTIL_H 1
+#define PKTGEN_UTIL_H
 
 #include <stdio.h>
 #include <rte_cycles.h>
