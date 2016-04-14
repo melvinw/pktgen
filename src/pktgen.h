@@ -27,8 +27,8 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-#include "job.pb-c.h"
-#include "status.pb-c.h"
+#include "protobufs/job.pb-c.h"
+#include "protobufs/status.pb-c.h"
 
 #define PORT "1729"
 #define SCHEDULER_IP "127.0.0.1"
@@ -37,6 +37,7 @@
 #define BACKLOG 25
 /* end demo stuff */
 
+#include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_random.h>
 #include <rte_errno.h>
@@ -56,7 +57,7 @@
 #define NUM_PKTS 32
 #define BURST_SIZE 32
 #define MAX_PKT_SIZE 2048
-#define MPOOL_SIZE ((1<<16) - 1)
+#define MPOOL_SIZE ((1 << 16) - 1)
 
 #define GEN_DEBUG 1
 #define GEN_KEY 0x1234
@@ -71,12 +72,12 @@
 #define ETH_OVERHEAD (ETH_PREAMBLE + ETH_START_OF_FRAME + ETH_FCS + ETH_GAP)
 
 #define FLAG_MEASURE_LATENCY 1
-#define FLAG_RANDOMIZE_PAYLOAD (1<<1)
-#define FLAG_GENERATE_ONLINE (1<<2)
-#define FLAG_LIMIT_FLOW_LIFE (1<<3)
-#define FLAG_WAIT (1<<4)
-#define FLAG_UPDATE (1<<5)
-#define FLAG_PRINT (1<<6)
+#define FLAG_RANDOMIZE_PAYLOAD (1 << 1)
+#define FLAG_GENERATE_ONLINE (1 << 2)
+#define FLAG_LIMIT_FLOW_LIFE (1 << 3)
+#define FLAG_WAIT (1 << 4)
+#define FLAG_UPDATE (1 << 5)
+#define FLAG_PRINT (1 << 6)
 
 struct rate_stats {
     uint64_t n;
@@ -167,12 +168,11 @@ struct pkt {
 };
 
 static const struct rte_eth_conf port_conf_default = {
-    .rxmode = { .max_rx_pkt_len = ETHER_MAX_LEN }
-};
+    .rxmode = {.max_rx_pkt_len = ETHER_MAX_LEN}};
 
-static struct ether_addr zero_mac UNUSED =
-{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }};
+static struct ether_addr zero_mac UNUSED = {
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
-static struct ether_addr ether_dst UNUSED =
-{{ 0x68, 0x05, 0xca, 0x00, 0x00, 0x01 }};
+static struct ether_addr ether_dst UNUSED = {
+    {0x68, 0x05, 0xca, 0x00, 0x00, 0x01}};
 #endif
