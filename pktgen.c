@@ -488,7 +488,7 @@ main(int argc, char *argv[])
 
     for (port = 0; port < nb_ports; port++) {
         if (!port_set[port]) {
-            rte_exit(EXIT_FAILURE, "Did not set %"PRIu8 "\n", port);
+            rte_exit(EXIT_FAILURE, "Did not set core for port %"PRIu8 "\n", port);
         }
         if (port_init(port, NULL) != 0) {
             rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
