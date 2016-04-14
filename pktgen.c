@@ -428,8 +428,7 @@ int
 main(int argc, char *argv[])
 {
 
-    //setup_daemon(); 
-    openlog("pktgen", LOG_PID, LOG_DAEMON);
+    setup_daemon(); 
 
     int i;
     uint8_t nb_ports, port, nb_cores, core; 
