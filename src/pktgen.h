@@ -29,11 +29,17 @@
 #include "protobufs/job.pb-c.h"
 #include "protobufs/status.pb-c.h"
 
+#define DAEMON 1
 #define PORT "1729"
 #define SCHEDULER_IP "127.0.0.1"
 #define SCHEDULER_PORT "1800"
 #define BUFSIZE 8192
 #define BACKLOG 25
+
+#if !DAEMON
+    #define syslog(priority, ...) printf(__VA_ARGS__)
+#endif
+
 /* end demo stuff */
 
 #include <rte_config.h>
