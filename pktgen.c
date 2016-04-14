@@ -428,7 +428,8 @@ int
 main(int argc, char *argv[])
 {
 
-    setup_daemon();
+    //setup_daemon(); 
+    openlog("pktgen", LOG_PID, LOG_DAEMON);
 
     int i;
     uint8_t nb_ports, port, nb_cores, core; 
@@ -443,19 +444,37 @@ main(int argc, char *argv[])
     argv += ret;
 
     if (argc < 1) {
-        rte_exit(EXIT_FAILURE, "Args: LISTEN_PORT");
+        rte_exit(EXIT_FAILURE, "Args: LISTEN_PORT [CORE_TO_PORT_MAPPING]\n");
     }
 
     nb_ports = rte_eth_dev_count();
     nb_cores = rte_lcore_count();
     uint8_t port_map[nb_cores];
 
-    core = 0;
-    for (port = 0; port < nb_ports; port++) {
-        if (port_init(port, NULL) != 0) {
-            rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
+    if (argc > 2) {
+        for (i = 2; i < argc; i++) {
+            sscanf(argv[i], "%" SCNu8 "." "%" SCNu8, &core, &port);
+            if (core >= nb_cores) {
+                rte_exit(EXIT_FAILURE, "Core %"PRIu8 " doesn't exist.\n", core);
+            }
+            if (port >= nb_ports) {
+                rte_exit(EXIT_FAILURE, "Port %"PRIu8 " doesn't exist.\n", port);
+            }
+            if (port_init(port, NULL) != 0) {
+                rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
+            }
+            port_map[core] = port;
+            printf("core: %" PRIu8 ", port: %" PRIu8 "\n", core, port);
         }
-        port_map[core++] = port;
+    } else { 
+        core = 0;
+        for (port = 0; port < nb_ports; port++) {
+            if (port_init(port, NULL) != 0) {
+                rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
+            }
+            printf("core: %" PRIu8 ", port: %" PRIu8 "\n", core, port);
+            port_map[core++] = port;
+        }
     }
 
     int fd_server = create_and_bind_socket(argv[1]);
