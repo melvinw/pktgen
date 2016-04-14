@@ -18,56 +18,56 @@ typedef struct rte_mbuf** mbuf_array_t;
 
 struct rte_mbuf tx_mbuf_template[RTE_MAX_LCORE];
 
-// static void 
-// setup_daemon(void)
-// {
+static void 
+setup_daemon(void)
+{
 
-//     FILE *f;
-//     pid_t pid;
+    FILE *f;
+    pid_t pid;
 
-//     pid = fork();
+    pid = fork();
     
-//     if (pid < 0) {
-//         exit(EXIT_FAILURE);
-//     }
-//     if (pid > 0) {
-//         exit(EXIT_SUCCESS);
-//     }
-//     if (setsid() < 0) {
-//         exit(EXIT_FAILURE);
-//     }
-//     pid = fork();
-//     if (pid < 0) {
-//         exit(EXIT_FAILURE);
-//     }
-//     if (pid > 0) {
-//         exit(EXIT_SUCCESS);
-//     }
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+    if (setsid() < 0) {
+        exit(EXIT_FAILURE);
+    }
+    pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
 
-//     umask(0);   
+    umask(0);   
 
-//     f = fopen("./pktgen.pid", "w+");
+    f = fopen("./pktgen.pid", "w+");
 
-//     if (f == NULL) {
-//         exit(EXIT_FAILURE);
-//     }
+    if (f == NULL) {
+        exit(EXIT_FAILURE);
+    }
 
-//     if (fprintf(f, "%d", getpid()) <= 0) {
-//         fclose(f);    
-//         exit(EXIT_FAILURE);
-//     }
+    if (fprintf(f, "%d", getpid()) <= 0) {
+        fclose(f);    
+        exit(EXIT_FAILURE);
+    }
 
-//     if ((chdir("/")) < 0) {
-//         exit(EXIT_FAILURE);
-//     }
+    if ((chdir("/")) < 0) {
+        exit(EXIT_FAILURE);
+    }
 
-//     close(STDIN_FILENO);
-//     close(STDOUT_FILENO);
-//     close(STDERR_FILENO);
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
 
-//     openlog("pktgen", LOG_PID, LOG_DAEMON);
+    openlog("pktgen", LOG_PID, LOG_DAEMON);
 
-// }
+}
 
 /* Stolen from BESS
  * https://github.com/NetSys/bess/blob/develop/core/utils/random.h
