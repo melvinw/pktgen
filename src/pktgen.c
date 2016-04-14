@@ -431,7 +431,8 @@ response_handler(int fd UNUSED, char *request, int request_bytes,
 int
 main(int argc, char *argv[])
 {
-    setup_daemon();
+    if (DAEMON)
+        setup_daemon();
 
     int i;
     uint8_t nb_ports, port, nb_cores, core;
