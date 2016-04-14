@@ -13,6 +13,7 @@
 #include <math.h>
 #include <signal.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 /* start demo stuff */
 #include <errno.h>
