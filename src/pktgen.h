@@ -13,6 +13,7 @@
 #include <math.h>
 #include <signal.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 /* start demo stuff */
 #include <errno.h>
@@ -25,6 +26,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+
 
 #include "protobufs/job.pb-c.h"
 #include "protobufs/status.pb-c.h"
