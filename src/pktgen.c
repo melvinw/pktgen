@@ -15,7 +15,7 @@ port_init(uint8_t port, struct pktgen_config *config UNUSED)
     snprintf(name, sizeof(name), "RX%02u:%02u", port, (unsigned)0);
     struct rte_mempool *rx_mp = rte_pktmbuf_pool_create(
         name, 2 * GEN_DEFAULT_RX_RING_SIZE, 0, 0, RTE_MBUF_DEFAULT_BUF_SIZE,
-        rte_eth_dev_socket_id(port));
+        eth_dev_scoket_id(port));
     if (rx_mp == NULL) {
         rte_exit(EXIT_FAILURE, "Cannot create RX mbuf pool: %s\n",
                  rte_strerror(rte_errno));
@@ -24,14 +24,14 @@ port_init(uint8_t port, struct pktgen_config *config UNUSED)
     snprintf(name, sizeof(name), "TX%02u:%02u", port, (unsigned)0);
     struct rte_mempool *tx_mp = rte_pktmbuf_pool_create(
         name, 2 * GEN_DEFAULT_TX_RING_SIZE, 0, 0, RTE_MBUF_DEFAULT_BUF_SIZE,
-        rte_eth_dev_socket_id(port));
+        eth_dev_scoket_id(port));
     if (tx_mp == NULL) {
         rte_exit(EXIT_FAILURE, "Cannot create TX mbuf pool: %s\n",
                  rte_strerror(rte_errno));
     }
 
     struct rte_mbuf *mbuf = rte_pktmbuf_alloc(tx_mp);
-    tx_mbuf_template[0] = *mbuf;
+    tx_mbuf_template = *mbuf;
     rte_pktmbuf_free(mbuf);
 
     if (port >= rte_eth_dev_count()) {
@@ -44,9 +44,8 @@ port_init(uint8_t port, struct pktgen_config *config UNUSED)
     }
 
     for (q = 0; q < rx_rings; q++) {
-        retval =
-            rte_eth_rx_queue_setup(port, q, GEN_DEFAULT_RX_RING_SIZE,
-                                   rte_eth_dev_socket_id(port), NULL, rx_mp);
+        retval = rte_eth_rx_queue_setup(port, q, GEN_DEFAULT_RX_RING_SIZE,
+                                        eth_dev_scoket_id(port), NULL, rx_mp);
         if (retval != 0) {
             return retval;
         }
@@ -54,7 +53,7 @@ port_init(uint8_t port, struct pktgen_config *config UNUSED)
 
     for (q = 0; q < tx_rings; q++) {
         retval = rte_eth_tx_queue_setup(port, q, GEN_DEFAULT_TX_RING_SIZE,
-                                        rte_eth_dev_socket_id(port), NULL);
+                                        eth_dev_scoket_id(port), NULL);
         if (retval != 0) {
             return retval;
         }
@@ -85,7 +84,7 @@ lcore_init(void *arg)
     unsigned port = config->port;
     char name[7];
 
-    syslog(LOG_INFO, "Init core %d", rte_lcore_id());
+    syslog(LOG_INFO, "Init core %d\n", rte_lcore_id());
 
     config->seed = GEN_DEFAULT_SEED;
 
@@ -222,7 +221,9 @@ send_status(int status, char *ip, int ctrl)
     void *buf;
 
     if (sock < 0) {
-        syslog(LOG_ERR, "Failed to connect to the scheduler to send status.");
+        syslog(LOG_ERR,
+               "Failed to connect to the scheduler to send status. %s %s\n", ip,
+               port);
         close(sock);
         return -1;
     }
@@ -431,7 +432,9 @@ response_handler(int fd UNUSED, char *request, int request_bytes,
 int
 main(int argc, char *argv[])
 {
+#if DAEMON
     setup_daemon();
+#endif
 
     int i;
     uint8_t nb_ports, port, nb_cores, core;
@@ -489,28 +492,14 @@ main(int argc, char *argv[])
         }
     }
 
-    uint8_t lcore_active[256] = {0};
     for (port = 0; port < nb_ports; port++) {
         if (!port_set[port]) {
             rte_exit(EXIT_FAILURE, "Did not set core for port %"PRIu8 "\n", port);
         }
         if (port_init(port, NULL) != 0) {
             rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
-        }
-        uint8_t socket_id = rte_eth_dev_socket_id(port);
-        if (socket_id != 0 && socket_id != 1)
-            socket_id = 1;
-        RTE_LCORE_FOREACH_SLAVE(i)
-        {
-            uint8_t lcore_index = rte_lcore_index(i);
-            if (lcore_active[lcore_index] ||
-                rte_lcore_to_socket_id(i) != socket_id)
-                continue;
-            lcore_active[lcore_index] = 1;
-            port_map[lcore_index] = port;
-            break;
-        }        
-    }    
+        }       
+    }
 
     int fd_server = create_and_bind_socket(argv[1]);
     if (fd_server < 0) {
@@ -528,9 +517,6 @@ main(int argc, char *argv[])
     port = 0;
     RTE_LCORE_FOREACH_SLAVE(i)
     {
-        core = rte_lcore_index(i);
-        if (!lcore_active[core])
-            continue;
         memset(&config[core], 0, sizeof(struct pktgen_config));
         if (port >= nb_ports) {
             config[core].port = 0xff;
@@ -623,21 +609,6 @@ main(int argc, char *argv[])
                         sem_wait(&config[core].stop_sempahore);
                     }
                     ether_addr_copy(&cmd.dst_mac, &config[core].dst_mac);
-#if 0
-printf("config[%u] job: {\n"
-"\ttx_rate: %u\n"
-"\twarmup: %u\n"
-"\tduration: %u\n"
-"\tnum_flows: %u\n"
-"\tsize_min: %u\n"
-"\tsize_max: %u\n"
-"\tlife_min: %f\n"
-"\tlife_max: %f\n"
-"\tflags: %u\n}\n", i,
-config[i].tx_rate, config[i].warmup, config[i].duration,
-config[i].num_flows, config[i].size_min, config[i].size_max,
-config[i].life_min, config[i].life_max, config[i].flags);
-#endif
                 launch_done:
                     core++;
                     port++;
