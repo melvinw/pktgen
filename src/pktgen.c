@@ -449,19 +449,56 @@ main(int argc, char *argv[])
     argv += ret;
 
     if (argc < 1) {
-        rte_exit(EXIT_FAILURE, "Args: LISTEN_PORT");
+        rte_exit(EXIT_FAILURE, "Args: LISTEN_PORT [CORE_TO_PORT_MAPPING]\n");
     }
 
     nb_ports = rte_eth_dev_count();
     nb_cores = rte_lcore_count();
+    bool port_set[nb_ports], core_set[nb_cores];
     uint8_t port_map[nb_cores];
 
-    core = 0;
-    for (port = 0; port < nb_ports; port++) {
-        if (port_init(port, NULL) != 0) {
-            rte_exit(EXIT_FAILURE, "Cannot init port %" PRIu8 "\n", port);
+    for (i = 0; i < nb_ports; i++) {
+        port_set[i] = false;
+    }
+    for (i = 0; i < nb_cores; i++) {
+        core_set[i] = false;
+    }
+
+    if (argc > 2) {
+        for (i = 2; i < argc; i++) {
+            sscanf(argv[i], "%" SCNu8 "." "%" SCNu8, &core, &port);
+            if (core >= nb_cores) {
+                rte_exit(EXIT_FAILURE, "Core %"PRIu8 " doesn't exist.\n", core);
+            }
+            if (port >= nb_ports) {
+                rte_exit(EXIT_FAILURE, "Port %"PRIu8 " doesn't exist.\n", port);
+            }
+            if (port_set[port]) {
+                rte_exit(EXIT_FAILURE, "Core for port %"PRIu8 " was already set.\n", port);
+            } else if (core_set[core]) {
+                rte_exit(EXIT_FAILURE, "Core %"PRIu8 " was already set.\n", core);
+            } else {
+                port_map[core] = port;
+                core_set[core] = true;
+                port_set[port] = true;
+            }
+            printf("core: %" PRIu8 ", port: %" PRIu8 "\n", core, port);
         }
-        port_map[core++] = port;
+    } else {
+        core = 0;
+        for (port = 0; port < nb_ports; port++) {
+            port_map[core++] = port;
+            port_set[port] = true;
+        }
+    }
+
+    for (port = 0; port < nb_ports; port++) {
+        if (!port_set[port]) {
+            rte_exit(EXIT_FAILURE, "Did not set core for port %"PRIu8 "\n", port);
+        }
+        if (port_init(port, NULL) != 0) {
+            rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu8 "\n", port);
+        }       
     }
 
     int fd_server = create_and_bind_socket(argv[1]);
